@@ -5,260 +5,350 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>세일즈OS Widget</title>
 <style>
-
 :root {
-  --bg:          #1C2030;
-  --bg-inner:    #232a3e;
-  --border:      rgba(255,255,255,0.07);
-  --t-primary:   #F0F2F7;
-  --t-secondary: #7A8299;
-  --t-faint:     #3D4560;
-  --accent:      #C8A96E;
-  --accent-dim:  rgba(200,169,110,0.10);
-  --accent-mid:  rgba(200,169,110,0.45);
-  --radius:      14px;
+  --bg:      #14172A;
+  --bg-cell: #1C2038;
+  --bg-acc:  rgba(91,141,239,0.12);
+  --line:    rgba(255,255,255,0.07);
+  --t1: #E8EAF4;
+  --t2: #556080;
+  --t3: #272D46;
+  --acc:    #5B8DEF;
+  --acc-bd: rgba(91,141,239,0.28);
   --font: -apple-system, BlinkMacSystemFont, 'Segoe UI',
           'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
 }
 
 *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
 
-html, body {
+/* 흰색 깜빡임 완전 차단 */
+html { background: #14172A; }
+
+body {
   width: 100%; height: 100%;
+  min-height: 110px;
   font-family: var(--font);
-  background: transparent;
+  background: #14172A;
   -webkit-font-smoothing: antialiased;
   overflow: hidden;
 }
 
-/* =============================================
-   위젯 카드
-   - justify-content: space-between 으로
-     시간 / 날짜 / D-day 균등 배치
-   - padding 좌우 충분히 확보
-   ============================================= */
-.w {
+/* ============================================
+   루트 레이아웃
+   ============================================ */
+.root {
+  display: flex;
+  align-items: stretch;
+  width: 100%;
+  height: 100%;
+  min-height: 110px;
+  background: var(--bg);
+  overflow: hidden;
+}
+
+/* ============================================
+   [LEFT] 탁상시계
+   ============================================ */
+.clock {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;          /* 내용 크기만큼만 */
+  padding: 14px 20px;
+  gap: 5px;
+}
+
+.clock-brand {
+  font-size: 7px;
+  font-weight: 700;
+  letter-spacing: 3px;
+  color: var(--t2);
+  text-transform: uppercase;
+  opacity: 0.55;
+}
+
+.clock-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 0;
+}
+
+/* 숫자 셀 */
+.digit-cell {
   display: flex;
   align-items: center;
-  justify-content: space-between;  /* ← 핵심: 균등 배치 */
-  height: 100%;
-  min-height: 112px;
-  padding: 0 32px;                 /* ← 좌우 여백 확보 */
-  background: var(--bg);
-  border-radius: var(--radius);
-  overflow: hidden;
+  justify-content: center;
+  background: var(--bg-cell);
+  border-radius: 6px;
+  width: 48px;
+  height: 56px;
   position: relative;
 }
 
-.w::before {
+/* 7세그먼트 느낌 중앙선 */
+.digit-cell::after {
   content: '';
   position: absolute;
-  top: 0; left: 0; right: 0;
-  height: 1px;
-  background: linear-gradient(90deg,
-    transparent 0%,
-    rgba(255,255,255,0.09) 30%,
-    rgba(255,255,255,0.09) 70%,
-    transparent 100%);
+  left: 8px; right: 8px;
+  top: 50%; height: 1px;
+  background: rgba(255,255,255,0.035);
+  pointer-events: none;
 }
 
-/* =============================================
-   시간
-   ============================================= */
-.sec-time {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
+.digit {
+  font-size: 38px;
+  font-weight: 800;
+  color: var(--t1);
+  letter-spacing: -1px;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+  line-height: 1;
+  position: relative;
+  z-index: 1;
+}
+
+.col {
+  font-size: 28px;
+  font-weight: 200;
+  color: var(--t3);
+  margin: 0 4px 5px;
+  line-height: 1;
   flex-shrink: 0;
 }
 
-.time-row {
+/* 초 셀 */
+.digit-cell.sm {
+  width: 34px;
+  height: 38px;
+  border-radius: 5px;
+  margin-bottom: 4px;
+}
+.digit-cell.sm .digit { font-size: 22px; }
+
+.clock-foot {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-top: 1px;
+}
+
+.ampm {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  color: var(--acc);
+  opacity: 0.75;
+}
+
+.dot {
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  background: var(--acc);
+  opacity: 0.6;
+  animation: blink 1s step-end infinite;
+}
+@keyframes blink {
+  0%,100% { opacity:0.6; }
+  50%      { opacity:0.1; }
+}
+
+/* ============================================
+   구분선
+   ============================================ */
+.vline {
+  width: 1px;
+  background: var(--line);
+  align-self: stretch;
+  margin: 14px 0;
+  flex-shrink: 0;
+}
+
+/* ============================================
+   [RIGHT] 달력 + D-day
+   ============================================ */
+.right {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  padding: 14px 20px 14px 18px;
+  gap: 0;
+  justify-content: space-between;
+  min-width: 0;
+}
+
+/* 달력 오브제 */
+.cal {
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+}
+
+/* 헤더 — pseudo 제거, span으로 아이콘 처리 */
+.cal-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 5px;
+}
+
+.cal-icon {
+  display: inline-block;
+  width: 8px; height: 8px;
+  border: 1.5px solid var(--acc);
+  border-radius: 2px;
+  opacity: 0.55;
+  flex-shrink: 0;
+}
+
+.cal-header-txt {
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--t2);
+  letter-spacing: 0.4px;
+  white-space: nowrap;
+}
+
+/* 날짜 메인 */
+.cal-date {
   display: flex;
   align-items: baseline;
+  gap: 3px;
 }
 
-.t-hm {
-  font-size: 48px;
-  font-weight: 700;
-  color: var(--t-primary);
-  letter-spacing: -2.5px;
+.cal-month {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--acc);
+}
+
+.cal-day-num {
+  font-size: 46px;
+  font-weight: 800;
+  color: var(--t1);
+  letter-spacing: -2px;
   line-height: 1;
   font-variant-numeric: tabular-nums;
   font-feature-settings: "tnum";
 }
 
-.t-colon {
-  font-size: 38px;
-  font-weight: 200;
-  color: var(--t-faint);
-  margin: 0 2px;
-  line-height: 1;
+.cal-day-unit {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--t2);
+  margin-bottom: 3px;
 }
 
-.t-sec {
-  font-size: 19px;
-  font-weight: 300;
-  color: var(--t-faint);
-  letter-spacing: -0.5px;
-  font-variant-numeric: tabular-nums;
-  font-feature-settings: "tnum";
-  align-self: flex-end;
-  margin-bottom: 5px;
-  margin-left: 3px;
-}
-
-.t-ampm {
-  display: inline-block;
-  margin-top: 8px;
-  font-size: 10px;
-  font-weight: 600;
-  letter-spacing: 1px;
-  color: var(--accent);
-  border: 1px solid var(--accent-mid);
-  border-radius: 4px;
-  padding: 2px 8px;
-  width: fit-content;              /* ← AM뱃지 너비 텍스트에만 맞춤 */
-}
-
-/* =============================================
-   구분선
-   ============================================= */
-.sep {
-  width: 1px;
-  height: 50px;
-  background: var(--border);
-  flex-shrink: 0;
-  margin: 0 28px;
-}
-
-/* =============================================
-   날짜 — flex: 0 (auto 크기만)
-   ============================================= */
-.sec-date {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  flex: 0 0 auto;                  /* ← 내용 크기만 차지, 늘어나지 않음 */
-}
-
-.d-monthday {
-  font-size: 22px;
-  font-weight: 600;
-  color: var(--t-primary);
-  letter-spacing: -0.5px;
-  line-height: 1.2;
-}
-
-.d-yearweek {
-  font-size: 11px;
-  font-weight: 400;
-  color: var(--t-secondary);
-  margin-top: 5px;
-}
-
-.d-dayname {
+.cal-dow {
   font-size: 11px;
   font-weight: 500;
-  margin-top: 3px;
+  color: var(--t2);
+  margin-top: 4px;
+  letter-spacing: 0.3px;
 }
-.d-dayname.sun { color: #F87171; }
-.d-dayname.sat { color: #93C5FD; }
-.d-dayname.wkd { color: var(--t-secondary); }
+.cal-dow.sun { color: #F87171; }
+.cal-dow.sat { color: var(--acc); }
 
-/* =============================================
-   D-day — 오른쪽 끝 고정
-   ============================================= */
-.sec-dday {
-  flex-shrink: 0;
-}
-
-.dday-card {
+/* ============================================
+   D-day 카드
+   ============================================ */
+.dday {
   display: flex;
   flex-direction: column;
   align-items: center;
-  background: var(--accent-dim);
-  border: 1px solid var(--accent-mid);
+  justify-content: center;
+  background: var(--bg-acc);
+  border: 1px solid var(--acc-bd);
   border-radius: 10px;
-  padding: 11px 20px;
-  min-width: 82px;
+  padding: 10px 14px;
+  min-width: 70px;
+  flex-shrink: 0;
   gap: 1px;
 }
 
-.dday-label {
-  font-size: 9px;
+.dday-lbl {
+  font-size: 8px;
   font-weight: 700;
-  letter-spacing: 1.8px;
-  color: var(--accent);
-  opacity: 0.75;
+  letter-spacing: 2px;
+  color: var(--acc);
+  opacity: 0.6;
   text-transform: uppercase;
 }
 
 .dday-num {
-  font-size: 30px;
-  font-weight: 700;
-  color: var(--accent);
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--acc);
   letter-spacing: -1.5px;
-  line-height: 1.15;
+  line-height: 1.1;
   font-variant-numeric: tabular-nums;
   font-feature-settings: "tnum";
 }
 
-.dday-num.is-today {
-  font-size: 17px;
+.dday-num.today {
+  font-size: 14px;
   letter-spacing: 0;
-  line-height: 1.6;
+  line-height: 2.2;
 }
 
 .dday-desc {
-  font-size: 10px;
-  color: var(--accent);
-  opacity: 0.45;
+  font-size: 9px;
+  color: var(--acc);
+  opacity: 0.38;
   white-space: nowrap;
   margin-top: 2px;
 }
-
 </style>
 </head>
 <body>
+<div class="root">
 
-<div class="w">
-
-  <!-- 시간 -->
-  <div class="sec-time">
-    <div class="time-row">
-      <span class="t-hm"    id="hh">00</span>
-      <span class="t-colon">:</span>
-      <span class="t-hm"    id="mm">00</span>
-      <span class="t-colon" id="c2">:</span>
-      <span class="t-sec"   id="ss">00</span>
+  <!-- 탁상시계 -->
+  <div class="clock">
+    <div class="clock-brand">SALES OS</div>
+    <div class="clock-row">
+      <div class="digit-cell"><span class="digit" id="hh">09</span></div>
+      <span class="col">:</span>
+      <div class="digit-cell"><span class="digit" id="mm">00</span></div>
+      <span class="col" id="col-sec">:</span>
+      <div class="digit-cell sm" id="cell-sec"><span class="digit" id="ss">00</span></div>
     </div>
-    <span class="t-ampm" id="ampm">AM</span>
+    <div class="clock-foot">
+      <div class="dot"></div>
+      <span class="ampm" id="ampm">AM</span>
+    </div>
   </div>
 
-  <div class="sep"></div>
+  <div class="vline"></div>
 
-  <!-- 날짜 -->
-  <div class="sec-date">
-    <div class="d-monthday" id="monthDay">6월 9일</div>
-    <div class="d-yearweek" id="yearWeek">2026년 · 24주차</div>
-    <div class="d-dayname wkd" id="dayName">화요일</div>
-  </div>
+  <!-- 달력 + D-day -->
+  <div class="right">
+    <div class="cal">
+      <div class="cal-header">
+        <span class="cal-icon"></span>
+        <!-- 텍스트만 교체되는 별도 span — pseudo 버그 없음 -->
+        <span class="cal-header-txt" id="calHeader">2026년 · 6월 2주차</span>
+      </div>
+      <div class="cal-date">
+        <span class="cal-month"   id="calMonth">6월</span>
+        <span class="cal-day-num" id="calDay">9</span>
+        <span class="cal-day-unit">일</span>
+      </div>
+      <div class="cal-dow wkd" id="calDow">화요일</div>
+    </div>
 
-  <div class="sep"></div>
-
-  <!-- D-day -->
-  <div class="sec-dday" id="ddaySection">
-    <div class="dday-card">
-      <span class="dday-label">D-DAY</span>
-      <span class="dday-num"  id="ddayNum">-</span>
+    <div class="dday" id="ddaySection">
+      <span class="dday-lbl">D-DAY</span>
+      <span class="dday-num" id="ddayNum">-</span>
       <span class="dday-desc" id="ddayDesc">이번달 마감</span>
     </div>
   </div>
 
 </div>
-
 <script>
-/* ⚙️ 설정값 */
+/* ============================================
+   설정값
+   ============================================ */
 var CFG = {
   use12h:   true,
   showSec:  true,
@@ -269,34 +359,58 @@ var CFG = {
   ddayText: '이번달 마감',
 };
 
-if (!CFG.showDday) document.getElementById('ddaySection').style.display = 'none';
+/* 초 숨김 — 셀과 콜론 둘 다 정확히 숨김 */
 if (!CFG.showSec) {
-  document.getElementById('ss').style.display = 'none';
-  document.getElementById('c2').style.display = 'none';
+  document.getElementById('cell-sec').style.display = 'none';
+  document.getElementById('col-sec').style.display  = 'none';
+}
+/* D-day 숨김 */
+if (!CFG.showDday) {
+  document.getElementById('ddaySection').style.display = 'none';
+}
+
+/* ============================================
+   월 기준 주차 (1~5주차, 월요일 기준)
+   예) 해당 월 1일이 수요일이면:
+       offset = 수(3) - 1 = 2
+       1~5일이 1주차, 6~12일이 2주차 ...
+   ============================================ */
+function monthWeek(d) {
+  var firstDow = new Date(d.getFullYear(), d.getMonth(), 1).getDay();
+  var offset   = (firstDow === 0) ? 6 : firstDow - 1;
+  return Math.ceil((d.getDate() + offset) / 7);
+}
+
+/* ============================================
+   월 마지막 날
+   new Date(y, m+1, 0) 원리:
+   - 0일 = 전달 마지막 날
+   - 1월(0): new Date(y,1,0) = 1월31일
+   - 2월(1): new Date(y,2,0) = 2월28/29일 (윤년자동)
+   - 12월(11): new Date(y,12,0) = 12월31일
+   2027,2028년 포함 전 연도 자동 대응
+   ============================================ */
+function monthEnd(d) {
+  return new Date(d.getFullYear(), d.getMonth() + 1, 0);
 }
 
 var DAY_KO  = ['일요일','월요일','화요일','수요일','목요일','금요일','토요일'];
 var DAY_CLS = ['sun','wkd','wkd','wkd','wkd','wkd','sat'];
-
 function pad(n) { return ('0' + n).slice(-2); }
 
-function isoWeek(d) {
-  var t = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
-  t.setUTCDate(t.getUTCDate() + 4 - (t.getUTCDay() || 7));
-  var y1 = new Date(Date.UTC(t.getUTCFullYear(), 0, 1));
-  return Math.ceil((((t - y1) / 86400000) + 1) / 7);
-}
-
-function monthLastDay(d) {
-  // new Date(y, m+1, 0) = 해당 월 마지막 날 (JS Date 자동 처리)
-  return new Date(d.getFullYear(), d.getMonth() + 1, 0);
-}
-
+/* ============================================
+   tick: 매초 DOM 업데이트
+   각 요소는 textContent만 교체 — 누적 없음
+   ============================================ */
 function tick() {
   var now = new Date();
-  var H = now.getHours(), M = now.getMinutes(), S = now.getSeconds();
+  var H   = now.getHours();
+  var M   = now.getMinutes();
+  var S   = now.getSeconds();
   var dow = now.getDay();
-  var y = now.getFullYear(), mo = now.getMonth() + 1, d = now.getDate();
+  var y   = now.getFullYear();
+  var mo  = now.getMonth() + 1;
+  var d   = now.getDate();
 
   /* 시간 */
   var dispH = CFG.use12h ? (H % 12 || 12) : H;
@@ -304,33 +418,46 @@ function tick() {
   document.getElementById('mm').textContent = pad(M);
   document.getElementById('ss').textContent = pad(S);
 
-  var ampmEl = document.getElementById('ampm');
+  var amEl = document.getElementById('ampm');
   if (CFG.use12h) {
-    ampmEl.textContent = H < 12 ? 'AM' : 'PM';
-    ampmEl.style.display = 'inline-block';
+    amEl.textContent  = H < 12 ? 'AM' : 'PM';
+    amEl.style.display = 'inline';
   } else {
-    ampmEl.style.display = 'none';
+    amEl.style.display = 'none';
   }
 
-  /* 날짜 */
-  document.getElementById('monthDay').textContent = mo + '월 ' + d + '일';
-  document.getElementById('yearWeek').textContent =
-    y + '년' + (CFG.showWeek ? ' · ' + isoWeek(now) + '주차' : '');
+  /* 달력 헤더 — span.cal-header-txt 만 교체 */
+  var wkStr = CFG.showWeek ? ' · ' + mo + '월 ' + monthWeek(now) + '주차' : '';
+  document.getElementById('calHeader').textContent = y + '년' + wkStr;
 
-  var dn = document.getElementById('dayName');
-  dn.textContent = DAY_KO[dow];
-  dn.className   = 'd-dayname ' + DAY_CLS[dow];
+  /* 월, 일 */
+  document.getElementById('calMonth').textContent = mo + '월';
+  document.getElementById('calDay').textContent   = d;
+
+  /* 요일 */
+  var dowEl = document.getElementById('calDow');
+  dowEl.textContent = DAY_KO[dow];
+  dowEl.className   = 'cal-dow ' + DAY_CLS[dow];
 
   /* D-day */
   if (CFG.showDday) {
-    var target = CFG.ddayAuto ? monthLastDay(now) : new Date(CFG.ddayDate);
+    var target = CFG.ddayAuto
+      ? monthEnd(now)
+      : new Date(CFG.ddayDate);
     var today0 = new Date(y, now.getMonth(), d);
     var diff   = Math.round((target - today0) / 86400000);
     var ne     = document.getElementById('ddayNum');
 
-    if      (diff > 0)   { ne.textContent = 'D-' + diff;  ne.className = 'dday-num'; }
-    else if (diff === 0) { ne.textContent = 'D-Day';       ne.className = 'dday-num is-today'; }
-    else                 { ne.textContent = '+' + (-diff); ne.className = 'dday-num'; }
+    if (diff > 0) {
+      ne.textContent = 'D-' + diff;
+      ne.className   = 'dday-num';
+    } else if (diff === 0) {
+      ne.textContent = 'D-Day';
+      ne.className   = 'dday-num today';
+    } else {
+      ne.textContent = '+' + (-diff);
+      ne.className   = 'dday-num';
+    }
 
     document.getElementById('ddayDesc').textContent = CFG.ddayText;
   }
