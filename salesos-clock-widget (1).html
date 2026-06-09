@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>세일즈OS Widget</title>
+<style>
+
+:root {
+  --bg:          #1C2030;
+  --bg-inner:    #232a3e;
+  --border:      rgba(255,255,255,0.07);
+  --t-primary:   #F0F2F7;
+  --t-secondary: #7A8299;
+  --t-faint:     #3D4560;
+  --accent:      #C8A96E;
+  --accent-dim:  rgba(200,169,110,0.10);
+  --accent-mid:  rgba(200,169,110,0.45);
+  --radius:      14px;
+  --font: -apple-system, BlinkMacSystemFont, 'Segoe UI',
+          'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
+}
+
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+
+html, body {
+  width: 100%; height: 100%;
+  font-family: var(--font);
+  background: transparent;
+  -webkit-font-smoothing: antialiased;
+  overflow: hidden;
+}
+
+/* =============================================
+   위젯 카드
+   - justify-content: space-between 으로
+     시간 / 날짜 / D-day 균등 배치
+   - padding 좌우 충분히 확보
+   ============================================= */
+.w {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;  /* ← 핵심: 균등 배치 */
+  height: 100%;
+  min-height: 112px;
+  padding: 0 32px;                 /* ← 좌우 여백 확보 */
+  background: var(--bg);
+  border-radius: var(--radius);
+  overflow: hidden;
+  position: relative;
+}
+
+.w::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg,
+    transparent 0%,
+    rgba(255,255,255,0.09) 30%,
+    rgba(255,255,255,0.09) 70%,
+    transparent 100%);
+}
+
+/* =============================================
+   시간
+   ============================================= */
+.sec-time {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.time-row {
+  display: flex;
+  align-items: baseline;
+}
+
+.t-hm {
+  font-size: 48px;
+  font-weight: 700;
+  color: var(--t-primary);
+  letter-spacing: -2.5px;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}
+
+.t-colon {
+  font-size: 38px;
+  font-weight: 200;
+  color: var(--t-faint);
+  margin: 0 2px;
+  line-height: 1;
+}
+
+.t-sec {
+  font-size: 19px;
+  font-weight: 300;
+  color: var(--t-faint);
+  letter-spacing: -0.5px;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+  align-self: flex-end;
+  margin-bottom: 5px;
+  margin-left: 3px;
+}
+
+.t-ampm {
+  display: inline-block;
+  margin-top: 8px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  color: var(--accent);
+  border: 1px solid var(--accent-mid);
+  border-radius: 4px;
+  padding: 2px 8px;
+  width: fit-content;              /* ← AM뱃지 너비 텍스트에만 맞춤 */
+}
+
+/* =============================================
+   구분선
+   ============================================= */
+.sep {
+  width: 1px;
+  height: 50px;
+  background: var(--border);
+  flex-shrink: 0;
+  margin: 0 28px;
+}
+
+/* =============================================
+   날짜 — flex: 0 (auto 크기만)
+   ============================================= */
+.sec-date {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  flex: 0 0 auto;                  /* ← 내용 크기만 차지, 늘어나지 않음 */
+}
+
+.d-monthday {
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--t-primary);
+  letter-spacing: -0.5px;
+  line-height: 1.2;
+}
+
+.d-yearweek {
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--t-secondary);
+  margin-top: 5px;
+}
+
+.d-dayname {
+  font-size: 11px;
+  font-weight: 500;
+  margin-top: 3px;
+}
+.d-dayname.sun { color: #F87171; }
+.d-dayname.sat { color: #93C5FD; }
+.d-dayname.wkd { color: var(--t-secondary); }
+
+/* =============================================
+   D-day — 오른쪽 끝 고정
+   ============================================= */
+.sec-dday {
+  flex-shrink: 0;
+}
+
+.dday-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: var(--accent-dim);
+  border: 1px solid var(--accent-mid);
+  border-radius: 10px;
+  padding: 11px 20px;
+  min-width: 82px;
+  gap: 1px;
+}
+
+.dday-label {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 1.8px;
+  color: var(--accent);
+  opacity: 0.75;
+  text-transform: uppercase;
+}
+
+.dday-num {
+  font-size: 30px;
+  font-weight: 700;
+  color: var(--accent);
+  letter-spacing: -1.5px;
+  line-height: 1.15;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}
+
+.dday-num.is-today {
+  font-size: 17px;
+  letter-spacing: 0;
+  line-height: 1.6;
+}
+
+.dday-desc {
+  font-size: 10px;
+  color: var(--accent);
+  opacity: 0.45;
+  white-space: nowrap;
+  margin-top: 2px;
+}
+
+</style>
+</head>
+<body>
+
+<div class="w">
+
+  <!-- 시간 -->
+  <div class="sec-time">
+    <div class="time-row">
+      <span class="t-hm"    id="hh">00</span>
+      <span class="t-colon">:</span>
+      <span class="t-hm"    id="mm">00</span>
+      <span class="t-colon" id="c2">:</span>
+      <span class="t-sec"   id="ss">00</span>
+    </div>
+    <span class="t-ampm" id="ampm">AM</span>
+  </div>
+
+  <div class="sep"></div>
+
+  <!-- 날짜 -->
+  <div class="sec-date">
+    <div class="d-monthday" id="monthDay">6월 9일</div>
+    <div class="d-yearweek" id="yearWeek">2026년 · 24주차</div>
+    <div class="d-dayname wkd" id="dayName">화요일</div>
+  </div>
+
+  <div class="sep"></div>
+
+  <!-- D-day -->
+  <div class="sec-dday" id="ddaySection">
+    <div class="dday-card">
+      <span class="dday-label">D-DAY</span>
+      <span class="dday-num"  id="ddayNum">-</span>
+      <span class="dday-desc" id="ddayDesc">이번달 마감</span>
+    </div>
+  </div>
+
+</div>
+
+<script>
+/* ⚙️ 설정값 */
+var CFG = {
+  use12h:   true,
+  showSec:  true,
+  showWeek: true,
+  showDday: true,
+  ddayAuto: true,
+  ddayDate: '2026-12-31',
+  ddayText: '이번달 마감',
+};
+
+if (!CFG.showDday) document.getElementById('ddaySection').style.display = 'none';
+if (!CFG.showSec) {
+  document.getElementById('ss').style.display = 'none';
+  document.getElementById('c2').style.display = 'none';
+}
+
+var DAY_KO  = ['일요일','월요일','화요일','수요일','목요일','금요일','토요일'];
+var DAY_CLS = ['sun','wkd','wkd','wkd','wkd','wkd','sat'];
+
+function pad(n) { return ('0' + n).slice(-2); }
+
+function isoWeek(d) {
+  var t = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+  t.setUTCDate(t.getUTCDate() + 4 - (t.getUTCDay() || 7));
+  var y1 = new Date(Date.UTC(t.getUTCFullYear(), 0, 1));
+  return Math.ceil((((t - y1) / 86400000) + 1) / 7);
+}
+
+function monthLastDay(d) {
+  // new Date(y, m+1, 0) = 해당 월 마지막 날 (JS Date 자동 처리)
+  return new Date(d.getFullYear(), d.getMonth() + 1, 0);
+}
+
+function tick() {
+  var now = new Date();
+  var H = now.getHours(), M = now.getMinutes(), S = now.getSeconds();
+  var dow = now.getDay();
+  var y = now.getFullYear(), mo = now.getMonth() + 1, d = now.getDate();
+
+  /* 시간 */
+  var dispH = CFG.use12h ? (H % 12 || 12) : H;
+  document.getElementById('hh').textContent = pad(dispH);
+  document.getElementById('mm').textContent = pad(M);
+  document.getElementById('ss').textContent = pad(S);
+
+  var ampmEl = document.getElementById('ampm');
+  if (CFG.use12h) {
+    ampmEl.textContent = H < 12 ? 'AM' : 'PM';
+    ampmEl.style.display = 'inline-block';
+  } else {
+    ampmEl.style.display = 'none';
+  }
+
+  /* 날짜 */
+  document.getElementById('monthDay').textContent = mo + '월 ' + d + '일';
+  document.getElementById('yearWeek').textContent =
+    y + '년' + (CFG.showWeek ? ' · ' + isoWeek(now) + '주차' : '');
+
+  var dn = document.getElementById('dayName');
+  dn.textContent = DAY_KO[dow];
+  dn.className   = 'd-dayname ' + DAY_CLS[dow];
+
+  /* D-day */
+  if (CFG.showDday) {
+    var target = CFG.ddayAuto ? monthLastDay(now) : new Date(CFG.ddayDate);
+    var today0 = new Date(y, now.getMonth(), d);
+    var diff   = Math.round((target - today0) / 86400000);
+    var ne     = document.getElementById('ddayNum');
+
+    if      (diff > 0)   { ne.textContent = 'D-' + diff;  ne.className = 'dday-num'; }
+    else if (diff === 0) { ne.textContent = 'D-Day';       ne.className = 'dday-num is-today'; }
+    else                 { ne.textContent = '+' + (-diff); ne.className = 'dday-num'; }
+
+    document.getElementById('ddayDesc').textContent = CFG.ddayText;
+  }
+}
+
+tick();
+setInterval(tick, 1000);
+</script>
+</body>
+</html>
